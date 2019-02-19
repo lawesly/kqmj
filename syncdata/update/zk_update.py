@@ -100,7 +100,8 @@ while 1:
         attendanceVals.append((line[1], line[2], line[3], dwdate, dwtime, line[10], Name, depname, phoneNum))
         # attendanceVals.append((line[1],line[2],line[3],dwdate,dwtime,line[10],dic_userinfo[line[1]][0],dic_userinfo[line[1]][1],dic_userinfo[line[1]][2]))
 if attendanceVals:
-    cursor.executemany('insert into attendance(dwEnrollNumber, dwVerifyMode, dwInOutMode, dwDate, dwTime, dwWorkCode, Name, depname, phoneNum) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)', attendanceVals)
+    cursor.executemany('insert into attendance(dwEnrollNumber, dwVerifyMode, dwInOutMode, dwDate, dwTime, dwWorkCode, '
+                       'Name, depname, phoneNum) values(%s, %s, %s, %s, %s, %s, %s, %s, %s)', attendanceVals)
     dbconn.commit()
     logger.info("attendance add success")
 else:

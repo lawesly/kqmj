@@ -10,7 +10,7 @@ import os
 port = 60000
 doorIP='172.16.190.14'
 # SN = '74534e0d'
-SN= '65ea3819'
+SN= 'xxxxxxxx'
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     sock.connect((doorIP,port))

@@ -54,13 +54,14 @@ while 1:
         break
     name_list = line[2].split('\x00') 
     userinfoVals.append((line[1], name_list[0], line[3], line[4], line[5]))
-    #print line[1],name_list[0]
+    # print line[1],name_list[0]
 if len(userinfoVals) > 0:
     dbconn = MySQLdb.connect(host=dbhost, user=dbuser ,passwd=dbpass, db=dbname,
                              port=dbport, use_unicode=True, charset="utf8")
     cursor = dbconn.cursor()
     cursor.execute("truncate table userinfo")  # 先清空用户表
-    cursor.executemany('insert into userinfo(dwEnrollNumber,Name,Password,Privilege,Enabled) values(%s,%s,%s,%s,%s)', userinfoVals)
+    cursor.executemany('insert into userinfo(dwEnrollNumber,Name,Password,Privilege,Enabled) values(%s,%s,%s,%s,%s)',
+                       userinfoVals)
     dbconn.commit()
     logger.info("userinfo add success")
 else:
