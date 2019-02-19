@@ -19,4 +19,5 @@ bash> mysql -uroot zk < sql/zk_tables.sql
 
 ## 注意事项
 1.修改application/config/database.php中的数据库信息
+
 2.为保证不出错，安装目录为/www/attendance(可能有些程序写了绝对路径漏改了)
