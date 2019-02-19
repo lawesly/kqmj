@@ -1,0 +1,422 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+require_once("inc/Global.php");
+
+class Attendance_user extends CI_Controller {
+	public function __construct()
+	{
+		parent::__construct();
+		$this->load->model('att_model');
+		$this->load->helper('url_helper');
+	}
+
+	public function index()
+	{
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+		$this->load->view('header',$header);
+		$this->load->view('Node/attendance_user/index');
+		$this->load->view('footer');
+	}
+
+	public function search()
+	{
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+		$fromdate = $_POST['fromdate'];
+		$todate = $_POST['todate'];
+		$Name = $this->att_model->get_tab_one('users','username',$username)->realname;
+		$phoneNum = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+		$data['fromdate'] = $fromdate;
+		$data['todate'] = $todate;
+		if($fromdate != ""){
+			$arr = explode("/",$fromdate);	
+			$fromdate = $arr[2].$arr[0].$arr[1];
+			$this->db->where('dwDate >=',$fromdate);
+		}
+		if($todate != ""){
+                        $arr = explode("/",$todate);
+                        $todate = $arr[2].$arr[0].$arr[1];
+			$this->db->where('dwDate <=',$todate);
+		}
+		if($Name != ""){
+			$this->db->where('Name =',$Name);
+		}
+		$data['attendance'] = $this->db->order_by('id asc')->get("attendance")->result_array();
+                $dwVerifyMode_list = array(0=>'密码验证',1=>'一楼指纹机',2=>'卡验证');
+                $dwInOutMode_list = array(0=>'Check-In',1=>'Check-Out',2=>'Break-Out',3=>'Break-In',4=>'OT-In',5=>'OT-Out');
+#		date('w',strtotime('20160908'));
+		$result = array();
+		$Date_List_a1=array(substr($fromdate,0,4),substr($fromdate,4,2),substr($fromdate,6,2));
+		$Date_List_a2=array(substr($todate,0,4),substr($todate,4,2),substr($todate,6,2));
+		$d1=mktime(0,0,0,$Date_List_a1[1],$Date_List_a1[2],$Date_List_a1[0]);
+		$d2=mktime(0,0,0,$Date_List_a2[1],$Date_List_a2[2],$Date_List_a2[0]);
+		$Days = round(($d2-$d1)/3600/24);
+#		echo date("Ymd",strtotime("$fromdate   +30   day"));
+		$phoneNum = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+		$days_arr = array();
+		for($i=0;$i<=$Days;$i++){
+			$redate = date("Ymd",strtotime("$fromdate   +$i   day"));
+			$reweek_arr = array('日','一','二','三','四','五','六');
+			$reweek = date('w',strtotime($redate));
+			$days_arr[] = $redate;
+			$result[$redate] = array(
+				'id'=>0,
+				'dwEnrollNumber'=>null,
+				'dwVerifyMode'=>null,
+				'dwInOutMode'=>null,
+				'dwDate'=>null,
+				'dwTime'=>null,
+				'dwWorkCode'=>null,
+				'Name'=>null,
+				'depname'=>null,
+				'stime'=>null,
+				'etime'=>null,
+				'week'=>$reweek_arr[$reweek],
+				'checkM'=>'异常',
+				'checkA'=>'异常',
+				'onwork'=>null,
+				'offwork'=>null,
+				'type'=>'工作日',
+				'phoneNum'=>$phoneNum
+			);
+			if($reweek == 0 or $reweek == 6){
+				$result[$redate]['checkM'] = '正常';	
+				$result[$redate]['checkA'] = '正常';	
+				$result[$redate]['type'] = '节假日';	
+			}
+			if($Name != ""){
+				$result[$redate]['Name']= $Name;
+			}
+		}
+                foreach ($data['attendance'] as &$arr){
+                        $arr['dwVerifyMode'] = $dwVerifyMode_list[$arr['dwVerifyMode']];
+                        $arr['dwInOutMode'] = $dwInOutMode_list[$arr['dwInOutMode']];
+			$rdate = $arr['dwDate'];
+			#if($result[$rdate]['dwDate'] == null and $result[$rdate]['stime'] == null){
+			if($result[$rdate]['dwDate'] == null){
+				$arr['onwork'] = $arr['dwVerifyMode'];
+				$arr['offwork'] = null;
+				$arr['week'] = $result[$rdate]['week'];
+				if($arr['dwTime'] >= '17:30:00'){
+					$arr['offwork'] = $arr['dwVerifyMode'];
+	                                $arr['etime'] = $arr['dwTime'];
+        	                        $arr['stime'] = null;
+				}else{
+					$arr['stime'] = $arr['dwTime'];
+					$arr['etime'] = null;
+				}
+				$arr['checkM'] = "正常";
+				$arr['checkA'] = $result[$rdate]['checkA'];
+				$arr['type'] = $result[$rdate]['type'];
+				if($arr['dwTime'] >= '09:01:00'){
+					$arr['checkM'] = "异常";
+				}
+                                if($result[$rdate]['type'] == '节假日'){
+                                        $arr['checkM'] = "正常";
+                                }
+
+				$result[$rdate] = $arr;
+			}else{
+				$result[$rdate]['offwork'] = $arr['dwVerifyMode'];
+				$year = substr($rdate,0,4);
+				$month = substr($rdate,4,6);
+				$day = substr($rdate,6,8);
+				$stime_arr = explode(':',$result[$rdate]['stime']);
+				$etime_arr = explode(':',$arr['dwTime']);
+				$stime = mktime("$stime_arr[0]","$stime_arr[1]","$stime_arr[2]","$month","$day","$year");
+				$etime = mktime("$etime_arr[0]","$etime_arr[1]","$etime_arr[2]","$month","$day","$year");
+				$worktime = ($etime - $stime)/3600;
+				#print $worktime.'<br>';
+				$result[$rdate]['checkA'] = "正常";
+				if($arr['dwTime'] < '17:30:00'){
+					$result[$rdate]['checkA'] = "异常";
+				}
+		                if($worktime < 9 and $result[$rdate]['stime'] < '09:00:59'){
+                		        $result[$rdate]['checkA'] = "异常";
+		                }
+
+				if($result[$rdate]['week'] == '四'){
+					if($arr['dwTime'] < '20:00:00' or $worktime < 11.5){
+						$result[$rdate]['checkA'] = "异常";
+					}
+				}
+				if($result[$rdate]['type'] == '节假日'){
+					$result[$rdate]['checkA'] = "正常";
+				}
+				$result[$rdate]['etime'] = $arr['dwTime'];
+			}
+                }
+		if($data['attendance']){
+			$data['attendance'] = $result;
+		}
+
+		foreach($data['attendance'] as &$arr){
+			$dwDate = $arr['dwDate'];
+			$phoneNum = $arr['phoneNum'];
+			if($arr['stime'] == null){
+				$Name = $arr['Name'];
+				$swipetime = $this->att_model->get_tab_diy("select swipeTime from menjin where Name='$Name' and swipeDate='$dwDate' order by swipeTime limit 1");
+				if($swipetime){
+					$swipetime = $swipetime[0]['swipeTime'];
+					$arr['stime'] = $swipetime;
+					$arr['onwork'] = "门禁刷卡";
+				}
+			}
+                        if($arr['etime'] == null){
+                                $Name = $arr['Name'];
+                                $swipetime = $this->att_model->get_tab_diy("select swipeTime from menjin where Name='$Name' and swipeDate='$dwDate' order by swipeTime desc limit 1");
+                                if($swipetime){
+                                        $swipetime = $swipetime[0]['swipeTime'];
+                                        $arr['etime'] = $swipetime;
+                                        $arr['offwork'] = "门禁刷卡";
+                                }
+                        }
+			if($arr['checkM'] == '异常' or $arr['checkA'] == '异常'){
+				$arr['yc'] = "异常";
+				$entry = $this->att_model->get_tab_diy("select isack from anomaly where phoneNum='$phoneNum' and dwDate='$dwDate'");
+				if($entry){
+					$isack = $entry[0]['isack'];
+					if($isack == 1){
+						$arr['isack'] = '已确认';
+					}else{
+						$arr['isack'] = '未确认';
+					}
+				}else{
+					$arr['isack'] = '未确认';
+				}
+			}else{
+				$arr['yc'] = "正常";
+				$arr['isack'] = '未确认';
+			}
+			$entry = $this->att_model->get_tab_diy("select id from anomaly where phoneNum='$phoneNum' and dwDate='$dwDate'");
+			if($entry){
+				$arr['isdes'] = '有';
+			}else{
+				$arr['isdes'] = '无';
+			}
+
+		} 
+		$this->load->view('header',$header);
+		$this->load->view('Node/attendance_user/search', $data);
+		$this->load->view('footer');
+	}
+
+        public function mjshow()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+//		$name = $_GET['name'];
+//		$Name = urldecode($name);
+		$phoneNum = $_GET['phoneNum'];
+                $phoneNum_user = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+                if($phoneNum != $phoneNum_user){
+                         header("Location:?/login/");
+                        exit();
+                }
+		$swipedate = $_GET['swipedate'];
+		$data['menjin']	= $this->att_model->get_tab_diy("select * from menjin where phoneNum='$phoneNum' and swipeDate='$swipedate' order by swipeTime");
+                $this->load->view('Node/attendance/mjshow', $data);
+
+	}
+
+        public function anomaly()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+		$phoneNum = $_GET['id'];
+                $dwDate = $_GET['dwDate'];
+		$isexist = $this->att_model->get_tab_diy("select * from anomaly where dwDate='$dwDate' and phoneNum='$phoneNum'");
+		if($isexist){
+			$data['anomaly'] = $isexist;
+			global $anomalyTypeArr;
+			foreach($data['anomaly'] as &$arr){
+				$arr['type'] = $anomalyTypeArr[$arr['type']];
+				$arr['durtime'] = $arr['stime']."--".$arr['etime'];
+			}
+			$data['phoneNum'] = $phoneNum;
+			$data['dwDate'] = $dwDate;
+		}else{
+			$data['anomaly'] = array();
+			$data['phoneNum'] = $phoneNum;
+			$data['dwDate'] = $dwDate;
+		}
+                $this->load->view('Node/attendance_user/anomaly', $data);
+
+        }
+        public function anomaly_add()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+		global $anomalyTypeArr;
+                $phoneNum = $_GET['id'];
+                $dwDate = $_GET['dwDate'];
+		$data['phoneNum'] = $phoneNum;
+		$data['dwDate'] = $dwDate;
+		$data['anomalyTypeArr'] = $anomalyTypeArr;
+                //$isexist = $this->att_model->get_tab_diy("select * from anomaly where dwDate='$dwDate' and phoneNum='$phoneNum'");
+                $this->load->view('Node/attendance_user/anomaly_add', $data);
+
+        }
+        public function anomaly_add_cfm()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+                $phoneNum = $_POST['phoneNum'];
+		$phoneNum_user = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+		if($phoneNum != $phoneNum_user){
+			 header("Location:?/login/");
+			exit();
+		}
+                $dwDate = $_POST['dwDate'];
+		$type = $_POST['type'];
+		$reason = $_POST['reason'];
+		$stime = $_POST['stime'];
+		$stime = formatTime($stime);
+		$etime = $_POST['etime'];
+		$etime = formatTime($etime);
+		$Name = $this->att_model->get_tab_one('users','phoneNum',$phoneNum)->realname;
+		$sql = "insert into anomaly(dwDate,Name,phoneNum,reason,type,stime,etime) values('$dwDate','$Name','$phoneNum','$reason',$type,'$stime','$etime')";
+		$this->db->query($sql);
+		echo "1";
+
+	}
+        public function anomaly_update()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+                global $anomalyTypeArr;
+                $data['anomalyTypeArr'] = $anomalyTypeArr;
+                $id = $_GET['id'];
+		$entry = $this->att_model->get_tab_one('anomaly','id',$id);
+		$data['stime'] = $entry->stime;
+		$data['etime'] = $entry->etime;
+		$data['reason'] = $entry->reason;
+		$data['type']	= $entry->type;
+		$data['id'] = $id;
+                $this->load->view('Node/attendance_user/anomaly_update', $data);
+
+        }
+        public function anomaly_update_cfm()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+                $phoneNum_user = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+		$id = $_GET['id'];
+		$phoneNum = $this->att_model->get_tab_one('anomaly','id',$id)->phoneNum;
+                if($phoneNum != $phoneNum_user){
+                         header("Location:?/login/");
+                        exit();
+                }
+                $type = $_POST['type'];
+                $reason = $_POST['reason'];
+                $stime = $_POST['stime'];
+                $stime = formatTime($stime);
+                $etime = $_POST['etime'];
+                $etime = formatTime($etime);
+		$sql = "update anomaly set type=$type,stime='$stime',etime='$etime',reason='$reason' where id=$id";
+                $this->db->query($sql);
+                echo "1";
+
+        }
+
+        public function anomaly_del()
+        {
+                session_start();
+                if(!isset($_SESSION['userid'])){
+                        header("Location:?/login/");
+                        exit();
+                }
+                $userid=$_SESSION['userid'];
+                $username=$_SESSION['username'];
+                $gid = $_SESSION['gid'];
+                $header['gid'] = $gid;
+                $header['username'] = $username;
+                $header['title'] = "考勤管理";
+                $id = $_GET['id'];
+		$phoneNum = $this->att_model->get_tab_one('users','username',$username)->phoneNum;
+		$phoneNo = $this->att_model->get_tab_one('anomaly','id',$id)->phoneNum;
+		if($phoneNo != $phoneNum){
+                        header("Location:?/login/");
+                        exit();
+		}
+		$sql = "delete from anomaly where id=$id";
+		$this->db->query($sql);
+		echo "1";
+
+        }
+
+}

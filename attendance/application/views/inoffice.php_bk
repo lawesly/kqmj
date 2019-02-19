@@ -1,0 +1,54 @@
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="refresh" content="20">
+	<title>inoffice</title>
+	<link rel="stylesheet" href="/application/views/bootstrap-3.3.5-dist/css/bootstrap.min.css">
+	<script src="/application/views/bootstrap-3.3.5-dist/jquery.min.js"></script>
+	<script src="/application/views/bootstrap-3.3.5-dist/js/bootstrap.min.js"></script>
+
+<style>
+.col-xs-1dot5 {
+position: relative;
+min-height: 1px;
+padding-right: 5px;
+padding-left: 5px;
+}
+</style>
+
+</head>
+<body>
+<div class="container-fluid">
+<!--
+<div class="panel panel-default">
+	<div class="panel-heading">
+        	<h3 class="panel-title">员工出勤分布图</h3>
+        </div>
+        <div class="panel-body">
+-->
+		<?php foreach($userinfoGroup as $userinfo): ?>
+        	<div class='row'>
+			<?php foreach($userinfo as $arr): ?>
+			<div class="col-xs-2 col-md-2">
+				<div style="position:relative">
+					<?php if($arr['count'] == 1): ?>
+					<img src="/application/views/images/3.png">
+					<?php endif; ?>
+					<div style="position:absolute; z-index:2; left:5px; top:3px">
+						<?php echo $arr['Name']; ?>
+					</div>
+				</div>
+			</div>
+			<?php endforeach; ?>
+		</div>
+		<?php endforeach; ?>
+<!--
+	</div>
+</div>
+-->
+</div>
+</body>
+</html>
+

@@ -1,0 +1,75 @@
+<table class="table table-bordered table-hover definewidth m10" id="tab" >
+        <thead>
+                <tr>
+                        <th>异常ID</th>
+                        <th>邀请人</th>
+                        <th>邀请人手机号</th>
+                        <th>确认情况</th>
+                        <th>查看</th>
+                </tr>
+        </thead>
+        <tbody>
+                <?php foreach ($notice as $arr): ?>
+                        <tr>
+                                <td><?php echo $arr['anoID']; ?></td>
+                                <td><?php echo $arr['Name']; ?></td>
+                                <td><?php echo $arr['phoneNum']; ?></td>
+				<?php if($arr['isack'] == 0): ?>
+                                	<td><font color='red'><?php echo $arr['isack1']; ?></font></td>
+				<?php else: ?>
+                                	<td><?php echo $arr['isack1']; ?></td>
+				<?php endif; ?>
+				<?php if($arr['isread'] == 1): ?>
+                                	<td><a class="btn btn-xs btn-primary update" href='?/notice_user/detail/?id=<?php echo $arr['id']; ?>&isack=<?php echo $arr['isack']; ?>&isread=<?php echo $arr['isread']; ?>' data-toggle="modal" data-target="#myModal">查看</a></td>
+				<?php else: ?>	
+                                	<td><a class="btn btn-xs btn-default update" href='?/notice_user/detail/?id=<?php echo $arr['id']; ?>&isack=<?php echo $arr['isack']; ?>&isread=<?php echo $arr['isread']; ?>' data-toggle="modal" data-target="#myModal">查看</a></td>
+				<?php endif; ?>
+                        </tr>
+                <?php endforeach; ?>
+        </tbody>
+</table>
+<div class="modal fade" id="myModal">
+        <div class="modal-dialog">
+                <div class="modal-content">
+                        <div class="modal-header">
+                        </div>
+                        <div class="modal-body">
+                        </div>
+                </div>
+        </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#tab').DataTable({
+        "order": [[ 0, "asc" ]],
+        "iDisplayLength": 10,
+//        "columnDefs": [
+//            {"orderable": false, "targets": 2},
+//            {"orderable": false, "targets": 3}
+//        ],
+             "language": {
+                 "lengthMenu": "每页 _MENU_ 条记录",
+                 "zeroRecords": "没有找到记录",
+                 "info": "第 _PAGE_ 页 ( 总共 _PAGES_ 页 )",
+                 "infoEmpty": "无记录",
+                 "infoFiltered": "(从 _MAX_ 条记录过滤)",
+                 "search": "搜索",
+                "paginate": {
+                        "first":      "首页",
+                        "last":       "末页",
+                        "next":       "下页",
+                        "previous":   "上页"
+                    },
+             }
+
+    });
+} );
+
+$("#myModal").on("hidden.bs.modal", function() {
+    $(this).removeData("bs.modal");
+});
+
+
+</script>
+

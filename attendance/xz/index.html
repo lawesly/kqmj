@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title>Hicall语音软件</title>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+ 
+
+<link href="index.css?20140906" rel="stylesheet" type="text/css">
+</head>
+
+<body class="bodyBg1" onload="init()">
+<div class="header">
+	<div class="houseName">Hicall语音软件客户端下载</div>
+	<div class="logo"><a href=""></a></div>
+	<div class="btn home"><a href=""></a></div>
+</div>
+<div class="appCon">
+	<p><img src="images/fccs.png" alt="" /></p>
+	<p>Hicall语音软件客户端下载</p>
+	<p style="color:#FF0000">拨打电话必须连接WIFI热点@FCCS-HiCall</p>
+	<p> <img onclick="download('http://kq.fccs.cn/xz/sip.apk')" src="images/an_down.png" alt="" /> </p>
+	<p><img  onclick="download('https://itunes.apple.com/cn/app/media5-fone-sip-voip-mobile/id353988698?mt=8')"  src="images/ip_down.png" alt="" /></p>
+</div>
+ 
+<div class="footer1 bor2 pt10" id="footer1">
+	<div class="tip warnColor3">买房 卖房 就上房产超市网<br />2013浙B2-20100070</div>
+</div>
+
+<div id="wechat" class="m-wxtip">
+        <div class="mask" ontouchstart="hideWechat()"></div>
+	<script>
+
+
+function init(){
+	   var browser={
+    versions:function(){
+            var u = navigator.userAgent, app = navigator.appVersion;
+            return {         //移动终端浏览器版本信息
+                 trident: u.indexOf('Trident') > -1, //IE内核
+                presto: u.indexOf('Presto') > -1, //opera内核
+                webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+                gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1, //火狐内核
+                mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+                ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+                android: u.indexOf('Android') > -1 || u.indexOf('Linux') > -1, //android终端或uc浏览器
+                iPhone: u.indexOf('iPhone') > -1 , //是否为iPhone或者QQHD浏览器
+                iPad: u.indexOf('iPad') > -1, //是否iPad
+                webApp: u.indexOf('Safari') == -1 //是否web应该程序，没有头部与底部
+            };
+         }(),
+         language:(navigator.browserLanguage || navigator.language).toLowerCase()
+}
+ 
+
+     if(browser.versions.iPad||browser.versions.iPhone||browser.versions.ios)
+     {
+ 
+ 	
+		document.getElementById('device').className='ios-wxtip';
+		 
+      }else{
+ 
+	  
+document.getElementById("device").className = "android-wxtip";
+ 
+   }
+}
+	</script>
+        <div id='device' class="ios-wxtip" ></div>
+    </div>
+
+	
+<div style="display:none">
+<img src="http://img.tongji.linezing.com/814041/tongji.gif" style="display:none"/>
+<script type="text/javascript">
+var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
+document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3Fb70b48b4c6042b985978452a4665a4d8' type='text/javascript'%3E%3C/script%3E"));
+</script>
+
+    <script>
+
+
+	 
+    function download(gourl){
+	
+	 
+	 
+        if( isWechat ) {
+            showWechat();
+            return false;
+        }else{
+               location.href = gourl;
+           }
+        
+
+    }
+
+    function hideWechat(){
+        wechat.style.display = 'none';
+        document.body.className = '';
+    }
+
+    function showWechat(){
+        wechat.style.display = 'block';
+        document.body.className = 'wxbody';
+    }
+
+ 
+ 
+    var wechat = document.getElementById( 'wechat' );
+
+    
+
+    var isWechat = navigator.userAgent.match( /micromessenger/i );
+    if( isWechat ) {
+        showWechat();
+    }
+    
+ 
+
+    </script>
+
+</div></body>
+</html>
